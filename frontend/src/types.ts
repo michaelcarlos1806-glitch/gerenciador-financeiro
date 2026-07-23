@@ -1,14 +1,34 @@
-export interface ResumoPessoa {
-    id: string;
-    nome: string;
-    totalReceitas: number;
-    totalDespesas: number;
-    saldo: number;
+export interface Pessoa {
+  id: string;
+  nome: string;
+  idade: number;
+}
+
+export interface Transacao {
+  id: string;
+  descricao: string;
+  valor: number;
+  tipo: 'receita' | 'despesa';
+  pessoaId: string;
+}
+
+export interface NovaPessoa {
+  nome: string;
+  idade: number;
+}
+
+export interface NovaTransacao {
+  descricao: string;
+  valor: number;
+  tipo: 'receita' | 'despesa';
+  pessoaId: string;
 }
 
 export interface RelatorioTotais {
-    resumoPorPessoa: ResumoPessoa[];
-    totalGeralReceitas: number;
-    totalGeralDespesas: number;
-    saldoLiquidoGeral: number;
+  totalGeralReceitas: number;
+  totalGeralDespesas: number;
+  saldoGeral?: number;
+  saldoLiquidoGeral?: number;
+  itens?: any[];
+  resumoPorPessoa?: any[];
 }

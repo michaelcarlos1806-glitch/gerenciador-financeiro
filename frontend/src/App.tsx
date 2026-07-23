@@ -29,7 +29,7 @@ function App() {
         fetchPessoas(),
       ]);
       setRelatorio(dadosRelatorio);
-      setPessoas(dadosPessoas);
+      setPessoas(dadosPessoas || []);
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
       setErro('Não foi possível conectar à API. Verifique se o back-end está rodando.');
@@ -63,7 +63,7 @@ function App() {
       notificar('Pessoa cadastrada com sucesso!');
       await carregarDados();
     } catch (e: any) {
-      const msg = e?.response?.data ?? 'Erro ao cadastrar pessoa.';
+      const msg = e?.message || e?.response?.data || 'Erro ao cadastrar pessoa.';
       notificar(typeof msg === 'string' ? msg : 'Erro ao cadastrar pessoa.', true);
     }
   };
@@ -77,7 +77,7 @@ function App() {
       notificar('Pessoa removida com sucesso!');
       await carregarDados();
     } catch (e: any) {
-      const msg = e?.response?.data ?? 'Erro ao remover pessoa.';
+      const msg = e?.message || e?.response?.data || 'Erro ao remover pessoa.';
       notificar(typeof msg === 'string' ? msg : 'Erro ao remover pessoa.', true);
     }
   };
@@ -98,7 +98,7 @@ function App() {
       notificar('Transação cadastrada com sucesso!');
       await carregarDados();
     } catch (e: any) {
-      const msg = e?.response?.data ?? 'Erro ao cadastrar transação.';
+      const msg = e?.message || e?.response?.data || 'Erro ao cadastrar transação.';
       notificar(typeof msg === 'string' ? msg : 'Erro ao cadastrar transação.', true);
     }
   };
@@ -126,6 +126,7 @@ function App() {
       marginBottom: '24px',
       width: '100%',
       maxWidth: '500px',
+      boxSizing: 'border-box' as const,
     } as React.CSSProperties,
     input: {
       width: '100%',
@@ -158,6 +159,14 @@ function App() {
       fontSize: '12px',
     } as React.CSSProperties,
   };
+
+  const resumoItens = Array.isArray(relatorio?.itens) 
+    ? relatorio.itens 
+    : Array.isArray((relatorio as any)?.resumoPorPessoa) 
+    ? (relatorio as any).resumoPorPessoa 
+    : [];
+
+  const saldoGeralVal = relatorio?.saldoGeral ?? (relatorio as any)?.saldoLiquidoGeral ?? 0;
 
   return (
     <div style={estilos.pagina}>
@@ -199,7 +208,7 @@ function App() {
 
       <div style={estilos.card}>
         <h2 style={{ marginTop: 0, textAlign: 'center' }}>Pessoas Cadastradas</h2>
-        {pessoas.length === 0 ? (
+        {!pessoas || pessoas.length === 0 ? (
           <p style={{ color: '#888', textAlign: 'center' }}>Nenhuma pessoa cadastrada ainda.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -261,7 +270,7 @@ function App() {
             required
           >
             <option value="" disabled>Selecione uma pessoa</option>
-            {pessoas.map((p) => (
+            {pessoas && pessoas.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nome} ({p.idade} anos)
               </option>
@@ -276,12 +285,12 @@ function App() {
           <h2 style={{ marginTop: 0, textAlign: 'center' }}>Resumo Geral</h2>
           <p style={{ textAlign: 'center' }}>Total Receitas: R$ {relatorio.totalGeralReceitas}</p>
           <p style={{ textAlign: 'center' }}>Total Despesas: R$ {relatorio.totalGeralDespesas}</p>
-          <p style={{ textAlign: 'center', color: relatorio.saldoLiquidoGeral >= 0 ? '#00b37e' : '#f75a68' }}>
-            Saldo Líquido: R$ {relatorio.saldoLiquidoGeral}
+          <p style={{ textAlign: 'center', color: saldoGeralVal >= 0 ? '#00b37e' : '#f75a68' }}>
+            Saldo Líquido: R$ {saldoGeralVal}
           </p>
 
           <h2 style={{ marginTop: '30px', textAlign: 'center' }}>Resumo por Pessoa</h2>
-          {relatorio.resumoPorPessoa.length === 0 ? (
+          {resumoItens.length === 0 ? (
             <p style={{ color: '#888', textAlign: 'center' }}>Nenhuma transação cadastrada ainda.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
@@ -294,9 +303,9 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {relatorio.resumoPorPessoa.map((pessoa) => (
-                  <tr key={pessoa.id} style={{ borderBottom: '1px solid #29292e' }}>
-                    <td style={{ padding: '12px' }}>{pessoa.nome}</td>
+                {resumoItens.map((pessoa: any) => (
+                  <tr key={pessoa.pessoaId || pessoa.id} style={{ borderBottom: '1px solid #29292e' }}>
+                    <td style={{ padding: '12px' }}>{pessoa.nomePessoa || pessoa.nome}</td>
                     <td style={{ padding: '12px', color: '#00b37e' }}>R$ {pessoa.totalReceitas}</td>
                     <td style={{ padding: '12px', color: '#f75a68' }}>R$ {pessoa.totalDespesas}</td>
                     <td style={{ padding: '12px', color: pessoa.saldo >= 0 ? '#00b37e' : '#f75a68' }}>
